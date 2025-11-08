@@ -18,6 +18,14 @@
 - [Key Features](#-key-features)
 - [Technology Stack](#-technology-stack)
 - [System Architecture](#-system-architecture)
+  - [System Architecture Diagram](#system-architecture-diagram)
+  - [Detailed Module & API Structure](#detailed-module--api-structure)
+- [System Implementation Screenshots](#-system-implementation-screenshots)
+  - [Authentication & Onboarding](#1-authentication--onboarding)
+  - [Main Dashboard](#2-main-dashboard)
+  - [Filming Location Selection](#3-filming-location-selection)
+  - [Route Visualization & Navigation](#4-route-visualization--navigation)
+  - [Movie Review System](#5-movie-review-system)
 - [Database Schema](#-database-schema)
 - [API Endpoints](#-api-endpoints)
 - [Core Implementation](#-core-implementation)
@@ -237,6 +245,449 @@ Movie Trip addresses these challenges by providing:
    Client Form → POST /api/review → Prisma Create →
    Database → GET /api/review → UI Update
    ```
+
+---
+
+## 🏗️ System Architecture & Implementation
+
+### System Architecture Diagram
+
+![System Architecture](docs/images/시스템%20구성도.png)
+
+The Movie Trip system follows a three-tier architecture:
+
+**1. Client Layer (Frontend)**
+- **Users**: End-users accessing the web application through browsers
+- **Administrators**: System administrators managing content and monitoring
+
+**2. Application Layer (Next.js)**
+- **Movie-Related Modules**:
+  - Movie listing and detail pages
+  - Filming location management
+  - Route planning interface
+  - Review and rating system
+
+- **Regional Content Modules**:
+  - Seoul, Busan, Gyeonggi, and other regional explorers
+  - Geographic data visualization
+  - Location-based filtering
+
+- **User Management Modules**:
+  - Authentication (login/signup)
+  - Profile management
+  - Saved routes and progress tracking
+  - Points and leaderboard system
+
+**3. Data & API Layer**
+- **Supabase PostgreSQL Database**: All persistent data storage
+- **Kakao Mobility API**: Route optimization and navigation
+- **Prisma Client**: Type-safe ORM for database operations
+- **Supabase Auth API**: User authentication services
+
+### Detailed Module & API Structure
+
+![Module and API Details](docs/images/무비트립%20시스템의%20상세%20모듈%20및%20API.png)
+
+**Application Tier Components**:
+
+1. **Demo Application Module**: Main user-facing web application
+2. **Movie Search Module** (`영화 검색 모듈`): Browse and filter movies by title, genre, region
+3. **Content Detail Module** (`콘텐츠 상세 모듈`): Detailed movie information with filming locations
+4. **Review Management Module** (`리뷰 관리 모듈`): User reviews, ratings, and feedback
+5. **User Profile Module** (`사용자 관리 모듈`): Profile, saved routes, progress tracking
+
+**API Integration Layer**:
+
+- **Supabase DB**: PostgreSQL database with 13 tables
+  - Direct Prisma Client connection for all CRUD operations
+  - Handles user data, movie content, regional places, reviews, routes
+
+- **Kakao Mobility API**:
+  - Route optimization with waypoints
+  - Travel time and distance calculations
+  - Polyline coordinate generation
+
+- **Prisma Client**:
+  - Type-safe database queries
+  - Migration management
+  - Seed data generation
+
+- **Supabase Auth API**:
+  - JWT token generation and validation
+  - User session management
+  - Password encryption (currently plain text - needs improvement)
+
+---
+
+## 📱 System Implementation Screenshots
+
+### 1. Authentication & Onboarding
+
+![Login and Registration Screen](docs/images/그림1.%20로그인%20전%20회원가입%20화면.png)
+
+**Figure 1: Registration Interface**
+
+**Implementation Details**:
+
+- **File**: [src/app/signup/page.tsx](src/app/signup/page.tsx)
+- **API Endpoint**: `POST /api/user/signup`
+- **Database Table**: `User` table
+
+**Key Features Shown**:
+- Clean, minimalist design with gradient background
+- Four input fields: User ID, Email, Password, Password Confirmation
+- Real-time validation (client-side)
+- Error handling for duplicate users
+
+**Technical Implementation**:
+```typescript
+// API Route: src/app/api/user/signup/route.ts
+const newUser = await prisma.user.create({
+  data: {
+    userId: id,
+    email: email,
+    password: pw, // ⚠️ Plain text - should use bcrypt
+    point: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+});
+```
+
+**Security Considerations**:
+- Currently stores passwords in plain text (visible in screenshot implementation)
+- **Recommended improvement**: Implement bcrypt hashing before production
+- Email validation performed on client-side only
+
+---
+
+### 2. Main Dashboard
+
+![Main Dashboard After Login](docs/images/그림2.%20로그인%20후%20메인%20화면.png)
+
+**Figure 2: Movie Selection Dashboard**
+
+**Implementation Details**:
+
+- **File**: [src/app/movies/page.tsx](src/app/movies/page.tsx)
+- **API Endpoint**: `GET /api/movie`
+- **State Management**: Recoil atoms for selected movie
+
+**Key Features Shown**:
+- Grid layout displaying 10 featured Korean movies
+- Movie posters with titles
+- Clean navigation header with user profile
+- Responsive design with consistent spacing
+
+**Movies Displayed**:
+1. 남산의 부장들 (The Man Standing Next)
+2. 엑시트 (Exit)
+3. 기생충 (Parasite)
+4. 미드나이트 (Midnight)
+5. 박열 (Anarchist from Colony)
+6. 인터스텔라 (Interstellar)
+7. 탑건: 매버릭 (Top Gun: Maverick)
+8. 봄날은 간다 (One Fine Spring Day)
+9. 리틀 포레스트 (Little Forest)
+10. 어바웃타임 (About Time)
+
+**Technical Implementation**:
+```typescript
+// Fetching movies from database
+const movies = await prisma.movie.findMany({
+  select: {
+    id: true,
+    title: true,
+    posterUrl: true,
+    releaseYear: true,
+  },
+  orderBy: { id: 'asc' },
+});
+```
+
+**UI/UX Design**:
+- Poster images stored in `/public/images/` directory
+- CSS Grid layout for responsive columns
+- Hover effects for interactive feedback
+- Clean purple accent color (#8B5CF6) for branding
+
+---
+
+### 3. Filming Location Selection
+
+![Filming Location Selection](docs/images/그림3.%20영화%20선택%20후%20촬영지%20선택%20화면.png)
+
+**Figure 3: Location Selection Interface**
+
+**Implementation Details**:
+
+- **File**: [src/app/movies/[movie]/page.tsx](src/app/movies/[movie]/page.tsx)
+- **API Endpoint**: `GET /api/movie/[id]`
+- **Database Join**: `Movie` ↔ `MoviePlace`
+
+**Key Features Shown**:
+- Selected movie details (남산의 부장들)
+- Synopsis and movie information
+- Grid of 8 filming locations with thumbnail images
+- Location names displayed on hover/click
+- Real-time route preview on map
+
+**Filming Locations Displayed**:
+1. 청와대 (Blue House)
+2. 남산타워 (N Seoul Tower)
+3. 국회의사당 (National Assembly)
+4. 덕수궁 (Deoksugung Palace)
+5. 정동길 (Jeongdong-gil)
+6. Multiple other historic locations
+
+**Technical Implementation**:
+```typescript
+// Dynamic route parameter
+const { movie } = params;
+
+// Fetch movie with related places
+const movieData = await prisma.movie.findUnique({
+  where: { id: parseInt(movie) },
+  include: {
+    places: {
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        latitude: true,
+        longitude: true,
+        imageUrl: true,
+      },
+    },
+  },
+});
+
+// Store selected places in Recoil state
+const [selectedPlaces, setSelectedPlaces] = useRecoilState(placeListState);
+```
+
+**Map Integration**:
+- Places displayed as markers on Kakao Map
+- Checkbox selection for route planning
+- Real-time route calculation when places are selected
+
+---
+
+### 4. Route Visualization & Navigation
+
+![Route Map with Navigation](docs/images/그림4.%20각%20촬영지%20이동경로%20표시%20화면.png)
+
+**Figure 4: Interactive Route Map**
+
+**Implementation Details**:
+
+- **File**: [src/components/movie/RouteKakaoMap.tsx](src/components/movie/RouteKakaoMap.tsx)
+- **API Integration**: Kakao Mobility API, Kakao Maps JavaScript SDK
+- **Geolocation**: [src/hooks/useWatchLocation.ts](src/hooks/useWatchLocation.ts)
+
+**Key Features Shown**:
+- Full-screen Kakao Map of Seoul area
+- Optimized route with blue polyline connecting 3 locations
+- Custom markers for each filming location
+- Current user location marker (yellow pin)
+- Route distance and estimated time (bottom info panel)
+
+**Technical Implementation**:
+
+**Step 1: Route Optimization via Kakao Mobility API**
+```typescript
+const response = await axios.post(
+  'https://apis-navi.kakaomobility.com/v1/waypoints/directions',
+  {
+    origin: { x: startLng, y: startLat },
+    destination: { x: endLng, y: endLat },
+    waypoints: middlePoints.map(p => ({ x: p.longitude, y: p.latitude })),
+    priority: 'RECOMMEND',
+    car_fuel: 'GASOLINE',
+    car_hipass: false,
+    alternatives: false,
+    road_details: false,
+  },
+  {
+    headers: {
+      Authorization: `KakaoAK ${process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+  }
+);
+```
+
+**Step 2: Polyline Rendering (Triple-Layer Effect)**
+```typescript
+// Black outline (10px width)
+const polylineOutline = new window.kakao.maps.Polyline({
+  path: linePath,
+  strokeWeight: 10,
+  strokeColor: '#000000',
+  strokeOpacity: 0.6,
+  strokeStyle: 'solid',
+});
+
+// Red main line (6px width)
+const polylineMain = new window.kakao.maps.Polyline({
+  path: linePath,
+  strokeWeight: 6,
+  strokeColor: '#FF0000',
+  strokeOpacity: 0.8,
+  strokeStyle: 'solid',
+});
+
+// White dashed center (2px width)
+const polylineDashed = new window.kakao.maps.Polyline({
+  path: linePath,
+  strokeWeight: 2,
+  strokeColor: '#FFFFFF',
+  strokeOpacity: 1.0,
+  strokeStyle: 'shortdash',
+});
+```
+
+**Step 3: Real-time Location Tracking**
+```typescript
+const { location } = useWatchLocation(isRecordStart);
+
+useEffect(() => {
+  if (location && map) {
+    const userMarker = new window.kakao.maps.Marker({
+      position: new window.kakao.maps.LatLng(
+        location.latitude,
+        location.longitude
+      ),
+      map: map,
+    });
+  }
+}, [location, map]);
+```
+
+**Route Information Panel** (bottom of screenshot):
+- 3 location thumbnails with checkmarks showing completion status
+- Total distance: Calculated from Kakao Mobility response
+- Estimated time: Based on recommended route priority
+
+**GPS Proximity Detection**:
+```typescript
+// Haversine formula implementation
+function distance(lat1, lon1, lat2, lon2, threshold) {
+  const R = 6371; // Earth radius in km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) *
+    Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c * 1000; // Convert to meters
+  return distance <= threshold; // Returns true if within threshold
+}
+```
+
+**Progress Tracking Logic**:
+- When user is within 50m of a location → Mark as visited
+- Update `UserSaveRoute` table with completion status
+- Award points to user
+- Update UI with checkmark indicator
+
+---
+
+### 5. Movie Review System
+
+![Movie Review Interface](docs/images/그림5.%20각%20영화에%20대한%20리뷰%20화면.png)
+
+**Figure 5: User Review Submission**
+
+**Implementation Details**:
+
+- **File**: [src/app/movies/[movie]/page.tsx](src/app/movies/[movie]/page.tsx) (review section)
+- **API Endpoints**:
+  - `POST /api/review` - Submit new review
+  - `GET /api/review?movieId=[id]` - Fetch reviews
+- **Database Table**: `MovieReview`
+
+**Key Features Shown**:
+- Movie poster and title (남산의 부장들)
+- Detailed synopsis text
+- Star rating system (5-star display)
+- Text area for written review
+- Submit button (purple accent)
+
+**Technical Implementation**:
+
+**Review Submission**:
+```typescript
+// Client-side form handling
+const handleReviewSubmit = async () => {
+  const response = await axios.post('/api/review', {
+    movieId: parseInt(movieId),
+    userId: userInfo.id,
+    rating: selectedRating,
+    comment: reviewText,
+  });
+
+  if (response.data.status === 200) {
+    // Refresh reviews list
+    fetchReviews();
+    // Reset form
+    setReviewText('');
+    setSelectedRating(0);
+  }
+};
+```
+
+**API Route Implementation**:
+```typescript
+// src/app/api/review/route.ts
+export async function POST(request: NextRequest) {
+  const { movieId, userId, rating, comment } = await request.json();
+
+  const newReview = await prisma.movieReview.create({
+    data: {
+      movieId,
+      userId,
+      rating,
+      comment,
+      createdAt: new Date(),
+    },
+  });
+
+  return NextResponse.json({
+    data: newReview,
+    status: 200,
+  });
+}
+```
+
+**Review Display**:
+```typescript
+// Fetch existing reviews
+const reviews = await prisma.movieReview.findMany({
+  where: { movieId: parseInt(movieId) },
+  include: {
+    user: {
+      select: { userId: true },
+    },
+  },
+  orderBy: { createdAt: 'desc' },
+});
+```
+
+**Star Rating Component**:
+- Interactive star selection (1-5 stars)
+- Visual feedback on hover
+- Stored as integer in database
+- Average rating calculation for movie display
+
+**User Engagement**:
+- Reviews tied to user accounts (prevents anonymous spam)
+- Timestamps for all reviews
+- Ability to edit/delete own reviews
+- Points awarded for review submission (+10 points)
 
 ---
 
