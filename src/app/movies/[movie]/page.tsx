@@ -1,7 +1,7 @@
 "use client";
 import { selectPlaceState } from "@/atom/selectPlaceStore";
 import Divider from "@/components/common/Divider";
-import KakaoMap from "@/components/movie/KakaoMap";
+import RouteKakaoMap from "@/components/movie/RouteKakaoMap";
 import MovieDetails from "@/components/movie/MovieDetails";
 import PlaceBox from "@/components/movie/PlaceBox";
 import axios from "axios";
@@ -110,7 +110,7 @@ export default function MovieDetailPage({
         </div>
       </div>
       <div className="w-full flex flex-col items-center">
-        <KakaoMap />
+        <RouteKakaoMap />
         <div className="w-full max-w-[1920px] flex flex-col items-start mt-5 px-4 sm:px-8 md:px-16">
           <h2 className="text-[24px] sm:text-[28px] md:text-[32px] text-[#333333] font-[700] mb-2">
             선택한 촬영지

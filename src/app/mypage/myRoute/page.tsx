@@ -4,7 +4,7 @@ import RadialBarChart from "@/components/chart/RadialBarChart";
 import Divider from "@/components/common/Divider";
 import Overlay from "@/components/common/Overlay";
 import Popup from "@/components/common/Popup";
-import KakaoMap from "@/components/movie/KakaoMap";
+import RouteKakaoMap from "@/components/movie/RouteKakaoMap";
 import RouteCard from "@/components/mypage/RouteCard";
 import PlaceCard from "@/components/region/PlaceCard";
 import useWatchLocation, { Location } from "@/hooks/useWatchLocation";
@@ -146,7 +146,7 @@ export default function MyRoute() {
       {selectTitle ? (
         <>
           <div className="w-full relative">
-            <KakaoMap />
+            <RouteKakaoMap />
             <div className="absolute top-20 right-4 lg:right-8 lg:top-8 z-[999]">
               <div className="w-[100px] sm:w-[200px] lg:w-[240px] h-[100px] sm:h-[200px] lg:h-[240px]">
                 <RadialBarChart
