@@ -1,7 +1,7 @@
 "use client";
 import { selectPlaceState } from "@/atom/selectPlaceStore";
 import Divider from "@/components/common/Divider";
-import KakaoMap from "@/components/movie/KakaoMap";
+import RouteKakaoMap from "@/components/movie/RouteKakaoMap";
 import PlaceCard from "@/components/region/PlaceCard";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
@@ -81,7 +81,7 @@ export default function PlaceMapPage({
         <h1 className="text-[20px] sm:text-[22px] lg:text-[25px] mt-4 sm:mt-6 lg:mt-8">
           {decodeURIComponent(place)} 추천 경로
         </h1>
-        <KakaoMap />
+        <RouteKakaoMap />
         <div className="w-full mt-[50px] sm:mt-[60px] lg:mt-[70px]">
           <Divider height="h-[1px]" />
         </div>

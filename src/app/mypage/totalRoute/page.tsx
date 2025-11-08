@@ -1,8 +1,8 @@
 "use client";
 import { selectPlaceState } from "@/atom/selectPlaceStore";
 import Divider from "@/components/common/Divider";
-import KakaoMap from "@/components/movie/KakaoMap";
-import KakaoMap2 from "@/components/movie/KakaoMap2";
+import RouteKakaoMap from "@/components/movie/RouteKakaoMap";
+import RegionKakaoMap from "@/components/movie/RegionKakaoMap";
 import RouteCard from "@/components/mypage/RouteCard";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
@@ -35,7 +35,7 @@ export default function TotalRoutePage() {
     <div className="w-full flex flex-col items-center">
       <Divider />
       <div className="w-full relative">
-        <KakaoMap2 place={[...new Set(location)]} />
+        <RegionKakaoMap place={[...new Set(location)]} />
       </div>
       <div className="w-full flex flex-col gap-[40px] sm:gap-[60px] lg:gap-[86px] justify-center items-center mt-[40px] sm:mt-[60px] lg:mt-[86px]">
         {userSaveRoute.length === 0 ? (
