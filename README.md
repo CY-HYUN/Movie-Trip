@@ -252,7 +252,7 @@ Movie Trip addresses these challenges by providing:
 
 ### System Architecture Diagram
 
-![System Architecture](docs/images/시스템%20구성도.png)
+<img src="docs/images/시스템%20구성도.png" alt="System Architecture" width="100%" />
 
 The Movie Trip system follows a three-tier architecture:
 
@@ -286,7 +286,7 @@ The Movie Trip system follows a three-tier architecture:
 
 ### Detailed Module & API Structure
 
-![Module and API Details](docs/images/무비트립%20시스템의%20상세%20모듈%20및%20API.png)
+<img src="docs/images/무비트립%20시스템의%20상세%20모듈%20및%20API.png" alt="Module and API Details" width="100%" />
 
 **Application Tier Components**:
 
@@ -323,7 +323,7 @@ The Movie Trip system follows a three-tier architecture:
 
 ### 1. Authentication & Onboarding
 
-![Login and Registration Screen](docs/images/그림1.%20로그인%20전%20회원가입%20화면.png)
+<img src="docs/images/그림1.%20로그인%20전%20회원가입%20화면.png" alt="Login and Registration Screen" width="100%" />
 
 **Figure 1: Registration Interface**
 
@@ -363,7 +363,7 @@ const newUser = await prisma.user.create({
 
 ### 2. Main Dashboard
 
-![Main Dashboard After Login](docs/images/그림2.%20로그인%20후%20메인%20화면.png)
+<img src="docs/images/그림2.%20로그인%20후%20메인%20화면.png" alt="Main Dashboard After Login" width="100%" />
 
 **Figure 2: Movie Selection Dashboard**
 
@@ -415,7 +415,7 @@ const movies = await prisma.movie.findMany({
 
 ### 3. Filming Location Selection
 
-![Filming Location Selection](docs/images/그림3.%20영화%20선택%20후%20촬영지%20선택%20화면.png)
+<img src="docs/images/그림3.%20영화%20선택%20후%20촬영지%20선택%20화면.png" alt="Filming Location Selection" width="100%" />
 
 **Figure 3: Location Selection Interface**
 
@@ -475,7 +475,7 @@ const [selectedPlaces, setSelectedPlaces] = useRecoilState(placeListState);
 
 ### 4. Route Visualization & Navigation
 
-![Route Map with Navigation](docs/images/그림4.%20각%20촬영지%20이동경로%20표시%20화면.png)
+<img src="docs/images/그림4.%20각%20촬영지%20이동경로%20표시%20화면.png" alt="Route Map with Navigation" width="100%" />
 
 **Figure 4: Interactive Route Map**
 
@@ -598,7 +598,7 @@ function distance(lat1, lon1, lat2, lon2, threshold) {
 
 ### 5. Movie Review System
 
-![Movie Review Interface](docs/images/그림5.%20각%20영화에%20대한%20리뷰%20화면.png)
+<img src="docs/images/그림5.%20각%20영화에%20대한%20리뷰%20화면.png" alt="Movie Review Interface" width="100%" />
 
 **Figure 5: User Review Submission**
 
