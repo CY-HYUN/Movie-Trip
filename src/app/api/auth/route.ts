@@ -49,13 +49,13 @@ export async function GET(request: NextRequest) {
         const transporter = nodemailer.createTransport({
           service: "gmail",
           auth: {
-            user: "***REMOVED***", // 보내는 이메일 주소
-            pass: "***REMOVED***", // 이메일 비밀번호
+            user: process.env.MAIL_USER, // 보내는 이메일 주소
+            pass: process.env.MAIL_APP_PASSWORD, // 이메일 비밀번호
           },
         });
 
         const mailOptions = {
-          from: "***REMOVED***", // 보내는 이메일 주소
+          from: process.env.MAIL_USER, // 보내는 이메일 주소
           to: email, // 수신자 이메일 주소
           subject: "아이디 찾기 결과",
           text: `귀하의 아이디는 ${user.userId}입니다.\n비밀번호는 ${user.password}`,

@@ -1029,8 +1029,8 @@ Email-based account recovery (sends credentials via email).
 {
   service: "gmail",
   auth: {
-    user: "***REMOVED***",  // Hardcoded (security issue)
-    pass: "***REMOVED***"      // App-specific password (exposed)
+    user: process.env.MAIL_USER,  // Hardcoded (security issue)
+    pass: process.env.MAIL_APP_PASSWORD      // App-specific password (exposed)
   }
 }
 ```
