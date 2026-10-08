@@ -118,7 +118,7 @@ This was a university team project (2024). The security shortcuts below are real
 - **Passwords are stored and compared in plain text.** bcrypt is not integrated anywhere (it is not in `package.json`), and the account-recovery email sends the user's password back in plain text.
 - **The JWT is issued but never checked on the server.** `validateJwtToken()` in `src/utils/util.ts` has no caller; API routes trust the `userId` the client sends, and the only guard is the client-side redirect in `AuthProvider`.
 - **The Kakao REST API key ships to the browser**: it is a public-prefixed environment variable read in a client component (`RouteKakaoMap.tsx`). A server-side proxy route would keep it private.
-- **SMTP credentials were hard-coded** in `src/app/api/auth/route.ts`; the handler now reads env vars (`MAIL_USER`, `MAIL_APP_PASSWORD`). The old values remain retrievable in git history; treat them as compromised.
+- **SMTP credentials were hard-coded** in `src/app/api/auth/route.ts`; the handler now reads env vars (`MAIL_USER`, `MAIL_APP_PASSWORD`). The old values were removed from the git history on 2026-10-08; they were public before that, so treat them as revoked.
 - **CORS is wide open** (`Access-Control-Allow-Origin: *`) on API responses.
 - **Leaderboard and points are a UI prototype** — the ranking page renders sample data; no server code awards points yet.
 - **No automated tests.**

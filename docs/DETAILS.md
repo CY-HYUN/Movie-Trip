@@ -74,7 +74,7 @@ Body `{ id }` (numeric `User.id`). Soft delete — sets `deletedAt` to now. Same
 
 ### `GET /api/auth?email=...`
 
-Account recovery: looks the user up by email and sends their userId **and plain-text password** via Nodemailer/Gmail. SMTP credentials were hard-coded in this file; the handler now reads `MAIL_USER` / `MAIL_APP_PASSWORD` from env vars, but the old values remain retrievable in git history until the history is scrubbed. File: `src/app/api/auth/route.ts`.
+Account recovery: looks the user up by email and sends their userId **and plain-text password** via Nodemailer/Gmail. SMTP credentials were hard-coded in this file; the handler now reads `MAIL_USER` / `MAIL_APP_PASSWORD` from env vars, and the old values were removed from the git history on 2026-10-08. They were public before that, so treat them as revoked. File: `src/app/api/auth/route.ts`.
 
 ### `GET /api/movie`
 
