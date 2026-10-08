@@ -1,6 +1,8 @@
 # Movie Trip
 
-A full-stack Next.js 14 web app that turns filming locations from Korean movies and dramas into GPS-tracked travel routes: pick a title, select its real shooting locations, get an optimized driving route from the Kakao Mobility API, and check in on-site as live GPS tracking marks each stop visited.
+A full-stack Next.js 14 web app that turns filming locations from Korean movies and dramas into travel routes: pick a title, select its real shooting locations, get a driving route from the Kakao Mobility API, and check in on-site with a GPS position check that marks each stop visited.
+
+**Team and my role.** A four-person university capstone team (2024). I owned the Kakao integration: Kakao API research, the Kakao API integration design, and wiring the maps and route API into the web app. Teammates owned the backend and database design, the Next.js front-end UI, and the movie/drama database; testing was shared by all four. Source: the role table on slide 29 of `Final-Report, Presentation/Movie Trip Presentation.pptx`.
 
 ![Next.js](https://img.shields.io/badge/Next.js-14.2-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)
@@ -18,7 +20,7 @@ Every figure below is counted directly from this repository's code and data (pat
 | Curated regional attractions | **160** (8 regions × 20) | `public/서울.json` … `public/부산.json` |
 | GPS check-in threshold | **10 m** Haversine proximity | `src/utils/util.ts`, `src/app/mypage/myRoute/page.tsx` |
 | Route optimization | Kakao Mobility multi-waypoint directions | `src/components/movie/RouteKakaoMap.tsx` |
-| HTTP API handlers | **14** across 9 route files | `src/app/api/**/route.ts` |
+| HTTP API handlers | **14** across 9 route files (plus one CORS `OPTIONS` handler) | `src/app/api/**/route.ts` |
 | PostgreSQL tables (Prisma models) | **15** | `prisma/schema.prisma` |
 | Prisma migrations | **19** | `prisma/migrations/` |
 | Pages / React components | **12** pages, **33** components | `src/app/`, `src/components/` |
@@ -44,7 +46,8 @@ DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"
 TOKEN_SECRET_KEY="any-random-string"            # JWT signing key
 NEXT_PUBLIC_KAKAO_API_KEY="your-kakao-javascript-key"
 NEXT_PUBLIC_KAKAO_REST_API_KEY="your-kakao-rest-api-key"
-NEXT_PUBLIC_LOCAL_URL="http://localhost:3000"
+# optional, only for the account-recovery e-mail route:
+# MAIL_USER="..."  MAIL_APP_PASSWORD="..."
 ```
 
 Then:
@@ -55,7 +58,7 @@ npx prisma db seed              # see data notes below
 npm run dev                     # http://localhost:3000
 ```
 
-Verified locally: `npm run dev` compiles and serves the login page (HTTP 200). DB-backed pages and API routes need a reachable PostgreSQL (notes below).
+`npm run dev` should serve the login page without a database; DB-backed pages and API routes need a reachable PostgreSQL (notes below). No `package-lock.json` is committed, so `npm install` resolves the `^` ranges in `package.json` to whatever is current.
 
 ### Data notes (read before running)
 
@@ -68,24 +71,25 @@ Verified locally: `npm run dev` compiles and serves the login page (HTTP 200). D
 
 ```
 Browser ── Next.js pages + Recoil state + Kakao Maps SDK + Geolocation API
-   │
+   │    └──── HTTPS ──▶ Kakao Mobility REST API (multi-waypoint directions,
+   │                    called from the browser in RouteKakaoMap.tsx)
    ▼  HTTP
 Next.js App Router ── 14 API handlers (/api/*) ── Prisma ORM
-   │                                                 │
-   ▼                                                 ▼
-Kakao Mobility REST API                    PostgreSQL (15 tables)
-(multi-waypoint route optimization)        users · movies · 82 filming places
+                                                     │
+                                                     ▼
+                                           PostgreSQL (15 tables)
+                                           users · movies · 82 filming places
                                            8 regional place tables · reviews
                                            saved routes + progress
 ```
 
-One Next.js codebase serves both the UI (12 pages) and the backend (14 API handlers); all persistence goes through Prisma. Kakao services split cleanly: the Maps JS SDK renders client-side, the Mobility REST API computes driving routes server-of-record style, and the browser Geolocation API supplies live position for check-ins.
+One Next.js codebase serves both the UI (12 pages) and the backend (14 API handlers); all persistence goes through Prisma. All Kakao calls run in the browser: the Maps JS SDK draws the map, the client component `RouteKakaoMap.tsx` posts to the Mobility REST API for the driving route, and the browser Geolocation API gives the position for a check-in.
 
 ## How the core features work
 
 **Route optimization** — selected places are sent to Kakao Mobility `POST /v1/waypoints/directions` (origin, destination, waypoints, `priority: "distance"`), and the returned road geometry is drawn as a triple-layer polyline (black outline, red body, white dashes) on the Kakao map.
 
-**GPS check-in** — `useWatchLocation` wraps `navigator.geolocation.watchPosition()`; each position update runs a Haversine distance calculation (`distance()` in `src/utils/util.ts`) against the next unvisited stop. Within **10 m**, the client PATCHes `/api/content/[category]`, which flips that stop's `isSuccess` flag and recomputes `progress = visited / total × 100` on the saved route. Routes reaching 100% appear in the completed-routes overview.
+**GPS check-in** — on the saved-route page, the "기록시작" (start recording) button calls `navigator.geolocation.getCurrentPosition()` once (`src/app/mypage/myRoute/page.tsx`); the position is checked with a Haversine distance (`distance()` in `src/utils/util.ts`) against every stop on the route. Within **10 m** of a stop, the client PATCHes `/api/content/[category]`, which flips that stop's `isSuccess` flag and recomputes `progress = visited / total × 100` on the saved route. Routes reaching 100% appear in the completed-routes overview. Continuous tracking with `watchPosition()` exists as a hook (`src/hooks/useWatchLocation.ts`) but its call on this page is commented out, so each check-in is one button tap.
 
 **Auth and sessions** — custom JWT flow: login matches userId + password and signs a 1-hour token (`jsonwebtoken`); the token is kept in localStorage, user info in a Recoil atom, and a lightweight `AuthProvider` guard redirects unauthenticated visitors back to the login page; account deletion is a soft delete (`deletedAt` timestamp). Read the limitations section before judging this as production auth.
 
@@ -112,7 +116,9 @@ Full request/response reference, schema detail, and implementation walkthrough: 
 This was a university team project (2024). The security shortcuts below are real and are listed instead of papered over:
 
 - **Passwords are stored and compared in plain text.** bcrypt is not integrated anywhere (it is not in `package.json`), and the account-recovery email sends the user's password back in plain text.
-- **SMTP credentials were hard-coded** in `src/app/api/auth/route.ts`; the handler now reads env vars (`MAIL_USER`, `MAIL_APP_PASSWORD`). The old values remain retrievable in git history until the history is scrubbed — treat them as compromised.
+- **The JWT is issued but never checked on the server.** `validateJwtToken()` in `src/utils/util.ts` has no caller; API routes trust the `userId` the client sends, and the only guard is the client-side redirect in `AuthProvider`.
+- **The Kakao REST API key ships to the browser**: it is a public-prefixed environment variable read in a client component (`RouteKakaoMap.tsx`). A server-side proxy route would keep it private.
+- **SMTP credentials were hard-coded** in `src/app/api/auth/route.ts`; the handler now reads env vars (`MAIL_USER`, `MAIL_APP_PASSWORD`). The old values remain retrievable in git history; treat them as compromised.
 - **CORS is wide open** (`Access-Control-Allow-Origin: *`) on API responses.
 - **Leaderboard and points are a UI prototype** — the ranking page renders sample data; no server code awards points yet.
 - **No automated tests.**

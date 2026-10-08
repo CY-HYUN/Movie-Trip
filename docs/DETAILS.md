@@ -22,7 +22,7 @@ Three tiers:
 
 1. **Client** — Next.js pages with Recoil state, Kakao Maps JS SDK (loaded client-side), and the browser Geolocation API.
 2. **Application** — Next.js App Router serving 12 pages and 14 API handlers; all DB access goes through Prisma.
-3. **Data / external** — PostgreSQL (originally Supabase-hosted) with 15 tables; Kakao Mobility REST API for route computation.
+3. **Data / external** — PostgreSQL (originally Supabase-hosted) with 15 tables; Kakao Mobility REST API for route computation, called directly from the browser (client component `RouteKakaoMap.tsx`), not through the Next.js server.
 
 Auth is a custom JWT implementation inside the API routes (`jsonwebtoken`); Supabase is used only as a Postgres host, not for its Auth product.
 
@@ -121,7 +121,7 @@ Fetch reviews for a movie (newest first) / create a review `{ content, rating, m
 ### Geolocation hooks
 
 - [`src/hooks/useCurrentLocation.ts`](../src/hooks/useCurrentLocation.ts) — one-shot `getCurrentPosition` for initial map centering.
-- [`src/hooks/useWatchLocation.ts`](../src/hooks/useWatchLocation.ts) — continuous `watchPosition` subscription, activated when the user taps "start recording" on a saved route.
+- [`src/hooks/useWatchLocation.ts`](../src/hooks/useWatchLocation.ts) — continuous `watchPosition` subscription. Its call on the saved-route page is commented out; the "기록시작" (start recording) button instead calls `getCurrentPosition()` once per tap (`handleCheckLocation` in `src/app/mypage/myRoute/page.tsx`).
 
 ### Haversine distance and the 10 m check-in
 
@@ -139,7 +139,7 @@ export function distance(lat1, lon1, lat2, lon2, dis) {
 }
 ```
 
-The tracking page calls it with a **10-meter** threshold — `distance(lat, lng, latitude, longitude, 10)` in [`src/app/mypage/myRoute/page.tsx`](../src/app/mypage/myRoute/page.tsx) — then fires the PATCH described above. (Early prose drafts said 50 m or 100 m; the code says 10.)
+The tracking page calls it with a **10-meter** threshold — `distance(lat, lng, latitude, longitude, 10)` in [`src/app/mypage/myRoute/page.tsx`](../src/app/mypage/myRoute/page.tsx) — for every stop on the route, then fires the PATCH described above. (Early prose drafts said 50 m or 100 m; the code says 10.)
 
 ### Kakao Mobility route optimization
 
@@ -176,7 +176,7 @@ Login returns a 1-hour JWT stored client-side; `middleware.ts` applies CORS head
 2. **Pick a mode** — movies/dramas (10 titles) or regions (8 provinces).
 3. **Movie route**: select a title → its filming locations load with map markers → tick the places you want → the Kakao logo button renders the optimized route → save.
 4. **Region route**: pick a province → pick a category (e.g. 종로-고궁) → select places → save.
-5. **Track progress**: My Page → saved routes → "start recording" → allow location permission → visiting within 10 m of a stop checks it off and updates the progress percentage.
+5. **Track progress**: My Page → saved routes → "start recording" → allow location permission → tapping the button within 10 m of a stop checks it off and updates the progress percentage (one position check per tap, no continuous tracking).
 6. **Complete**: at 100% the route moves to the overview page, with the region polygon highlighted.
 7. **Review**: movie pages accept 1–5 star reviews with text.
 
